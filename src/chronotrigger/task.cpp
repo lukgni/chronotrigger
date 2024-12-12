@@ -3,7 +3,7 @@
 using namespace chronotrigger;
 
 Task::Task(TaskID tid,
-           TypeT type,
+           TaskTypeE type,
            const std::function<void()>& functor,
            std::chrono::milliseconds interval)
     : tid(tid), type(type), interval(interval), functor(std::move(functor)) {
@@ -29,10 +29,10 @@ TimePoint Task::getFinishedAt() const {
 TimePoint Task::getDesiredStartingTime() const {
   const TimePoint* timeReference = nullptr;
   switch (this->type) {
-    case TypeT::FixedRate:
+    case TaskTypeE::FixedRate:
       timeReference = &this->startedAt;
       break;
-    case TypeT::FixedDelay:
+    case TaskTypeE::FixedDelay:
       timeReference = &this->finishedAt;
       break;
   }
@@ -44,20 +44,20 @@ TimePoint Task::getDesiredStartingTime() const {
   return *timeReference + this->interval;
 }
 
-Task::StatusT Task::getStatus() const {
+TaskStatusE Task::getStatus() const {
   return this->status;
 }
 
-void Task::setStatus(StatusT status, TimePoint time) {
+void Task::setStatus(TaskStatusE status, TimePoint time) {
   if (time >= this->changedStatusAt) {
     this->status = status;
     this->changedStatusAt = time;
 
     switch (this->status) {
-      case StatusT::Finished:
+      case TaskStatusE::Finished:
         this->finishedAt = time;
         break;
-      case StatusT::Started:
+      case TaskStatusE::Started:
         this->startedAt = time;
         break;
       default:

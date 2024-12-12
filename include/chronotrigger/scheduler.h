@@ -8,11 +8,13 @@
 #include <tuple>
 #include <unordered_set>
 
+#include "./executionStatusEvent.h"
 #include "./scheduledTask.h"
 #include "./task.h"
 #include "./types.h"
 
 namespace chronotrigger {
+
 class Scheduler {
  public:
   enum class TickIntervalsE {
@@ -37,7 +39,7 @@ class Scheduler {
   void execute();
 
  private:
-  TaskID addTask(Task::TypeT type,
+  TaskID addTask(TaskTypeE type,
                  std::function<void()> functor,
                  std::chrono::milliseconds interval);
 
@@ -53,8 +55,8 @@ class Scheduler {
 
   std::priority_queue<ScheduledTask> plannedTasksQueue;
 
-  using TaskExecutionStatus = std::tuple<TaskID, Task::StatusT, TimePoint>;
-  std::queue<TaskExecutionStatus> executionStatusQueue;
+  std::queue<ExecutionStatusEvent> executionStatusQueue;
 };
+
 }  // namespace chronotrigger
 #endif  // CHRONOTRIGGER_SCHEDULER_H

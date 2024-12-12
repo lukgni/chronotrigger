@@ -6,22 +6,23 @@
 #include "./types.h"
 
 namespace chronotrigger {
+
+enum class TaskStatusE : int {
+  Scheduled,
+  Started,
+  Blocked,
+  Finished,
+};
+
+enum class TaskTypeE : int {
+  FixedRate,
+  FixedDelay,
+};
+
 class Task {
  public:
-  enum class TypeT : int {
-    FixedRate,
-    FixedDelay,
-  };
-
-  enum class StatusT : int {
-    Scheduled,
-    Started,
-    Blocked,
-    Finished,
-  };
-
   Task(TaskID tid,
-       TypeT type,
+       TaskTypeE type,
        const std::function<void()>& functor,
        std::chrono::milliseconds interval);
 
@@ -29,9 +30,9 @@ class Task {
 
   std::function<void()> getFunctor() const;
 
-  StatusT getStatus() const;
+  TaskStatusE getStatus() const;
 
-  void setStatus(StatusT status, TimePoint time);
+  void setStatus(TaskStatusE status, TimePoint time);
 
   TimePoint getStartedAt() const;
 
@@ -41,9 +42,9 @@ class Task {
 
  private:
   TaskID tid;
-  StatusT status = StatusT::Finished;
+  TaskStatusE status = TaskStatusE::Finished;
 
-  TypeT type;
+  TaskTypeE type;
   std::chrono::milliseconds interval;
 
   TimePoint startedAt;
@@ -52,6 +53,7 @@ class Task {
 
   std::function<void()> functor;
 };
+
 }  // namespace chronotrigger
 
 #endif  // CHRONOTRIGGER_TASK_H

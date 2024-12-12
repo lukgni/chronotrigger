@@ -6,6 +6,7 @@
 #include "./types.h"
 
 namespace chronotrigger {
+
 class ScheduledTask {
  public:
   ScheduledTask(TaskID tid,
@@ -28,5 +29,6 @@ class ScheduledTask {
   std::function<void()> functor;
   TimePoint scheduledTime;
 };
+
 }  // namespace chronotrigger
 #endif  // CHRONOTRIGGER_SCHEDULEDTASK_H
