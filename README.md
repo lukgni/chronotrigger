@@ -1,4 +1,3 @@
-
 # ChronoTrigger - Task Scheduler
 
 Chrono Trigger is a classic jRPG game where players travel through time to prevent a global catastrophe.
@@ -6,7 +5,8 @@ I played a lot of it as a kid on the SNES, but still, it's a great name for a ta
 
 ## Building
 
-This project includes both a static library and example programs that link to it. To build the project, follow the instructions below.
+This project includes both a static library and example programs that link to it. To build the project, follow the
+instructions below.
 
 ### Requirements
 
@@ -24,7 +24,8 @@ cd chronotrigger
 
 ### Build the project
 
-The project includes two primary targets: **the library** (`lib`) and **the examples** (`examples`). You can build both using the default `all` target, or build them separately.
+The project includes two primary targets: **the library** (`lib`) and **the examples** (`examples`). You can build both
+using the default `all` target, or build them separately.
 
 #### Build all components (library + examples)
 
@@ -35,6 +36,7 @@ make
 ```
 
 This will:
+
 1. Build the static library `libchronotrigger.a` located in the `build/lib` directory.
 2. Compile all the example programs in the `examples` directory and place the executables in `build/bin/`.
 
@@ -47,6 +49,7 @@ make lib
 ```
 
 This will:
+
 1. Compile all source files from the `src` directory.
 2. Create the static library `libchronotrigger.a` in the `build/lib/` directory.
 3. Copy the header files from `include/` into the library's include directory (`build/lib/include/chronotrigger/`).
@@ -94,4 +97,5 @@ chronotrigger/
 
 ---
 
-If you encounter any issues or need further customization, refer to the `Makefile` or the project documentation for more details.
+If you encounter any issues or need further customization, refer to the `Makefile` or the project documentation for more
+details.

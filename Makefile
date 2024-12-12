@@ -8,9 +8,9 @@ LIB_DIR := $(BUILD_DIR)/lib
 EXAMPLES_BUILD_DIR := $(BUILD_DIR)/bin/
 
 LIB := $(LIB_DIR)/libchronotrigger.a
-LIB_INCLUDE_DIR := $(LIB_DIR)/include
+LIB_INCLUDE_DIR := $(BUILD_DIR)/include
 
-LIB_SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
+LIB_SOURCES := $(wildcard $(SRC_DIR)/chronotrigger/*.cpp) $(wildcard $(SRC_DIR)/internal/*.cpp)
 LIB_OBJECTS := $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(LIB_SOURCES))
 
 EXAMPLE_SOURCES := $(wildcard $(EXAMPLES_DIR)/*.cpp)
@@ -26,12 +26,13 @@ $(LIB): $(LIB_OBJECTS)
 	ar rcs $@ $^
 	mkdir -p $(LIB_INCLUDE_DIR)
 	cp -r $(INCLUDE_DIR)/chronotrigger $(LIB_INCLUDE_DIR)
-	rm -f $(LIB_OBJECTS)  # Remove object files after creating the library
+	rm -f $(LIB_OBJECTS)
+	rm -r $(BUILD_DIR)/chronotrigger
 
 $(EXAMPLES_BUILD_DIR)/%: $(BUILD_DIR)/%.o $(LIB)
 	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $^ -o $@
-	rm -f $(BUILD_DIR)/$(basename $@).o  # Remove object files after linking
+	rm -f $(BUILD_DIR)/$(basename $@).o
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	mkdir -p $(dir $@)
@@ -40,7 +41,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 $(BUILD_DIR)/%.o: $(EXAMPLES_DIR)/%.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-	rm -f $(BUILD_DIR)/$(basename $@).o  # Remove object files after linking
+	rm -f $(BUILD_DIR)/$(basename $@).o
 
 clean:
 	rm -rf $(BUILD_DIR)
