@@ -42,7 +42,7 @@ class Task {
 
  private:
   TaskID tid;
-  TaskStatusE status = TaskStatusE::Finished;
+  TaskStatusE status;
 
   TaskTypeE type;
   std::chrono::milliseconds interval;

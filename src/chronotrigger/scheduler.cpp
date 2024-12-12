@@ -16,12 +16,12 @@ TaskID Scheduler::getNewTaskID() {
   return taskId++;
 }
 
-void Scheduler::execute() {
+[[noreturn]] void Scheduler::execute() {
   while (true) {
     auto processingStartTime = chronotrigger::TimeClock::now();
 
     // process all pending statuses
-    while (this->executionStatusQueue.empty() == false) {
+    while (!this->executionStatusQueue.empty()) {
       auto executionStatus = this->executionStatusQueue.front();
       this->executionStatusQueue.pop();
 
@@ -38,13 +38,13 @@ void Scheduler::execute() {
         continue;
       }
 
-      this->plannedTasksQueue.push(ScheduledTask(
-          taskID, taskPtr->getFunctor(), taskPtr->getDesiredStartingTime()));
+      this->plannedTasksQueue.emplace(taskID, taskPtr->getFunctor(),
+                                      taskPtr->getDesiredStartingTime());
       taskPtr->setStatus(TaskStatusE::Scheduled, TimeClock::now());
     }
 
     // Execution phase
-    while (this->plannedTasksQueue.empty() == false) {
+    while (!this->plannedTasksQueue.empty()) {
       auto task = this->plannedTasksQueue.top();
       if (task.getSheduledTime() > TimeClock::now()) {
         break;
@@ -53,11 +53,11 @@ void Scheduler::execute() {
 
       this->plannedTasksQueue.pop();
 
-      this->executionStatusQueue.push(ExecutionStatusEvent(
-          task.getTaskID(), TaskStatusE::Started, TimeClock::now()));
+      this->executionStatusQueue.emplace(task.getTaskID(), TaskStatusE::Started,
+                                         TimeClock::now());
       task.Run();
-      this->executionStatusQueue.push(ExecutionStatusEvent(
-          task.getTaskID(), TaskStatusE::Finished, TimeClock::now()));
+      this->executionStatusQueue.emplace(
+          task.getTaskID(), TaskStatusE::Finished, TimeClock::now());
     }
 
     auto processingEndTime = TimeClock::now();
@@ -71,23 +71,23 @@ void Scheduler::execute() {
   }
 }
 
-TaskID Scheduler::addFixedRateTask(std::function<void()> functor,
+TaskID Scheduler::addFixedRateTask(const std::function<void()>& functor,
                                    std::chrono::milliseconds interval) {
-  return this->addTask(TaskTypeE::FixedRate, std::move(functor), interval);
+  return this->addTask(TaskTypeE::FixedRate, functor, interval);
 }
 
-TaskID Scheduler::addFixedDelayTask(std::function<void()> functor,
+TaskID Scheduler::addFixedDelayTask(const std::function<void()>& functor,
                                     std::chrono::milliseconds interval) {
-  return this->addTask(TaskTypeE::FixedDelay, std::move(functor), interval);
+  return this->addTask(TaskTypeE::FixedDelay, functor, interval);
 }
 
 TaskID Scheduler::addTask(TaskTypeE type,
-                          std::function<void()> functor,
+                          const std::function<void()>& functor,
                           std::chrono::milliseconds interval) {
   auto tid = this->getNewTaskID();
 
   this->taskLookupTable[tid] =
-      std::make_unique<Task>(Task(tid, type, std::move(functor), interval));
+      std::make_unique<Task>(Task(tid, type, functor, interval));
 
   return tid;
 }

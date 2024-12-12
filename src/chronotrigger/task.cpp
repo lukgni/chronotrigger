@@ -6,7 +6,11 @@ Task::Task(TaskID tid,
            TaskTypeE type,
            const std::function<void()>& functor,
            std::chrono::milliseconds interval)
-    : tid(tid), type(type), interval(interval), functor(std::move(functor)) {
+    : tid(tid),
+      status(TaskStatusE::Finished),
+      type(type),
+      interval(interval),
+      functor(functor) {
   auto now = TimeClock::now();
 
   startedAt = now;
@@ -48,9 +52,9 @@ TaskStatusE Task::getStatus() const {
   return this->status;
 }
 
-void Task::setStatus(TaskStatusE status, TimePoint time) {
+void Task::setStatus(TaskStatusE newStatus, TimePoint time) {
   if (time >= this->changedStatusAt) {
-    this->status = status;
+    this->status = newStatus;
     this->changedStatusAt = time;
 
     switch (this->status) {

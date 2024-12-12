@@ -26,26 +26,26 @@ class Scheduler {
 
   Scheduler(int threadPoolSize, TickIntervalsE tickInterval);
 
-  TaskID addFixedRateTask(std::function<void()> functor,
+  TaskID addFixedRateTask(const std::function<void()>& functor,
                           std::chrono::milliseconds interval);
 
-  TaskID addFixedDelayTask(std::function<void()> functor,
+  TaskID addFixedDelayTask(const std::function<void()>& functor,
                            std::chrono::milliseconds interval);
 
   void addDependency(TaskID target, TaskID dependency);
 
   void addDependency(TaskID target, std::vector<TaskID> dependencies);
 
-  void execute();
+  [[noreturn]] void execute();
 
  private:
   TaskID addTask(TaskTypeE type,
-                 std::function<void()> functor,
+                 const std::function<void()>& functor,
                  std::chrono::milliseconds interval);
 
   void calculateExecutionPlan();
 
-  TaskID getNewTaskID();
+  static TaskID getNewTaskID();
 
   int threadPoolSize;
   std::chrono::milliseconds timerInterval;
