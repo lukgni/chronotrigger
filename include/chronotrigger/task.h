@@ -1,54 +1,57 @@
 #ifndef CHRONOTRIGGER_TASK_H
 #define CHRONOTRIGGER_TASK_H
 
-#include "./types.h"
-
 #include <functional>
 
+#include "./types.h"
+
 namespace chronotrigger {
-    class Task {
-    public:
-        enum class TypeT : int {
-            FixedRate,
-            FixedDelay,
-        };
+class Task {
+ public:
+  enum class TypeT : int {
+    FixedRate,
+    FixedDelay,
+  };
 
-        enum class StatusT : int {
-            Scheduled,
-            Started,
-            Blocked,
-            Finished,
-        };
+  enum class StatusT : int {
+    Scheduled,
+    Started,
+    Blocked,
+    Finished,
+  };
 
-        Task(TaskID tid, TypeT type, const std::function<void()> &functor, std::chrono::milliseconds interval);
+  Task(TaskID tid,
+       TypeT type,
+       const std::function<void()>& functor,
+       std::chrono::milliseconds interval);
 
-        ~Task() = default;
+  ~Task() = default;
 
-        std::function<void()> getFunctor() const;
+  std::function<void()> getFunctor() const;
 
-        StatusT getStatus() const;
+  StatusT getStatus() const;
 
-        void setStatus(StatusT status, TimePoint time);
+  void setStatus(StatusT status, TimePoint time);
 
-        TimePoint getStartedAt() const;
+  TimePoint getStartedAt() const;
 
-        TimePoint getFinishedAt() const;
+  TimePoint getFinishedAt() const;
 
-        TimePoint getDesiredStartingTime() const;
+  TimePoint getDesiredStartingTime() const;
 
-    private:
-        TaskID tid;
-        StatusT status = StatusT::Finished;
+ private:
+  TaskID tid;
+  StatusT status = StatusT::Finished;
 
-        TypeT type;
-        std::chrono::milliseconds interval;
+  TypeT type;
+  std::chrono::milliseconds interval;
 
-        TimePoint startedAt;
-        TimePoint finishedAt;
-        TimePoint changedStatusAt;
+  TimePoint startedAt;
+  TimePoint finishedAt;
+  TimePoint changedStatusAt;
 
-        std::function<void()> functor;
-    };
-}
+  std::function<void()> functor;
+};
+}  // namespace chronotrigger
 
-#endif //CHRONOTRIGGER_TASK_H
+#endif  // CHRONOTRIGGER_TASK_H
