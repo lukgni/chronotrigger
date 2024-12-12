@@ -19,7 +19,7 @@ void Scheduler::execute() {
         auto processingStartTime = chronotrigger::TimeClock::now();
 
         // process all pending statuses
-        while(this->executionStatusQueue.empty() == false) {
+        while (this->executionStatusQueue.empty() == false) {
             auto statusTuple = this->executionStatusQueue.front();
             this->executionStatusQueue.pop();
 
@@ -30,35 +30,42 @@ void Scheduler::execute() {
         }
 
         // prepare execution plan
-        for (const auto& [taskID, taskPtr] : taskLookupTable) {
-            if(taskPtr->getStatus() != Task::StatusT::Finished) {
+        for (const auto &[taskID, taskPtr]: taskLookupTable) {
+            if (taskPtr->getStatus() != Task::StatusT::Finished) {
                 continue;
             }
 
-            this->plannedTasksQueue.emplace(ScheduledTask(taskID,  taskPtr->getFunctor(), taskPtr->getDesiredStartingTime()));
+            this->plannedTasksQueue.push(
+                    ScheduledTask(taskID, taskPtr->getFunctor(), taskPtr->getDesiredStartingTime()));
             taskPtr->setStatus(Task::StatusT::Scheduled, TimeClock::now());
         }
 
 
         // Execution phase
-        while(this->plannedTasksQueue.empty() == false) {
+        while (this->plannedTasksQueue.empty() == false) {
             auto task = this->plannedTasksQueue.top();
-            if(task.getSheduledTime() <= TimeClock::now()) {
-                this->plannedTasksQueue.pop();
-
-                this->executionStatusQueue.push(TaskExecutionStatus(task.getTaskID(), Task::StatusT::Started, TimeClock::now()));
-                task.Run();
-                this->executionStatusQueue.push(TaskExecutionStatus(task.getTaskID(), Task::StatusT::Finished, TimeClock::now()));
+            if (task.getSheduledTime() > TimeClock::now()) {
+                break;
             }
+            std::cout << "TaskID: " << task.getTaskID()
+                      << std::endl;//<< " scheduled_time: " << std::chrono::duration_cast<std::chrono::milliseconds>(task.getSheduledTime().time_since_epoch()).count() << std::endl;
+
+            this->plannedTasksQueue.pop();
+
+            this->executionStatusQueue.push(
+                    TaskExecutionStatus(task.getTaskID(), Task::StatusT::Started, TimeClock::now()));
+            task.Run();
+            this->executionStatusQueue.push(
+                    TaskExecutionStatus(task.getTaskID(), Task::StatusT::Finished, TimeClock::now()));
+
         }
 
-        auto processingEndTime = TimeClock ::now();
+        auto processingEndTime = TimeClock::now();
         auto consumedSlotTime = std::chrono::duration_cast<std::chrono::milliseconds>(
                 processingEndTime - processingStartTime
-                );
+        );
 
         auto timeToSleep = std::max(std::chrono::milliseconds(0), this->timerInterval - consumedSlotTime);
-        std::cout << "sleeping for: " << timeToSleep.count() << std::endl;
         std::this_thread::sleep_for(timeToSleep);
     }
 }
@@ -85,6 +92,6 @@ TaskID Scheduler::addTask(Task::TypeT type, std::function<void()> functor, std::
 }
 
 void Scheduler::addDependency(TaskID target, TaskID dependency) {
-    // add cyclic detection
+    // add circular dependency detection
     this->taskDependencies[target].insert(dependency);
 }
