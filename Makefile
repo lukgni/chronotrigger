@@ -5,16 +5,17 @@ INCLUDE_DIR := include
 EXAMPLES_DIR := examples
 BUILD_DIR := build
 LIB_DIR := $(BUILD_DIR)/lib
-EXAMPLES_BUILD_DIR := $(BUILD_DIR)/bin/
+EXAMPLES_BUILD_DIR := $(BUILD_DIR)/bin
+OBJ_DIR := $(BUILD_DIR)/obj
 
 LIB := $(LIB_DIR)/libchronotrigger.a
 LIB_INCLUDE_DIR := $(BUILD_DIR)/include
 
 LIB_SOURCES := $(wildcard $(SRC_DIR)/chronotrigger/*.cpp) $(wildcard $(SRC_DIR)/internal/*.cpp)
-LIB_OBJECTS := $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(LIB_SOURCES))
+LIB_OBJECTS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(LIB_SOURCES))
 
 EXAMPLE_SOURCES := $(wildcard $(EXAMPLES_DIR)/*.cpp)
-EXAMPLE_OBJECTS := $(patsubst $(EXAMPLES_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(EXAMPLE_SOURCES))
+EXAMPLE_OBJECTS := $(patsubst $(EXAMPLES_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(EXAMPLE_SOURCES))
 EXAMPLES := $(patsubst $(EXAMPLES_DIR)/%.cpp, $(EXAMPLES_BUILD_DIR)/%, $(EXAMPLE_SOURCES))
 
 all: $(LIB) $(EXAMPLES)
@@ -26,24 +27,20 @@ $(LIB): $(LIB_OBJECTS)
 	ar rcs $@ $^
 	mkdir -p $(LIB_INCLUDE_DIR)
 	cp -r $(INCLUDE_DIR)/chronotrigger $(LIB_INCLUDE_DIR)
-	rm -f $(LIB_OBJECTS)
-	rm -r $(BUILD_DIR)/chronotrigger
 
-$(EXAMPLES_BUILD_DIR)/%: $(BUILD_DIR)/%.o $(LIB)
+$(EXAMPLES_BUILD_DIR)/%: $(OBJ_DIR)/%.o $(LIB)
 	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $^ -o $@
-	rm -f $(BUILD_DIR)/$(basename $@).o
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: $(EXAMPLES_DIR)/%.cpp
+$(OBJ_DIR)/%.o: $(EXAMPLES_DIR)/%.cpp
 	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-	rm -f $(BUILD_DIR)/$(basename $@).o
 
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean build-lib build-examples
+.PHONY: all clean lib examples
