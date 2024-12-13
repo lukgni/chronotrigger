@@ -6,7 +6,7 @@ using namespace chronotrigger;
 
 WorkerPool::WorkerPool(int size) : keepRunning(true) {
   for (auto i = 0; i < size; i++) {
-    threadPool.emplace_back([&] { executeTasksInThread(); });
+    threadPool.emplace_back([=] { executeTasksInThread(i); });
   }
 }
 
@@ -28,7 +28,8 @@ void WorkerPool::submit(const WorkerTask& task) {
   workersQv.notify_one();
 }
 
-void WorkerPool::executeTasksInThread() {
+void WorkerPool::executeTasksInThread(int workerID) {
+  std::cout << "Worker " << workerID << " BONJOUR " << std::endl;
   while (true) {
     std::unique_ptr<WorkerTask> ptr = nullptr;
     {
@@ -49,8 +50,8 @@ void WorkerPool::executeTasksInThread() {
     }
 
     if (ptr) {
-      std::cout << "Thread " << std::this_thread::get_id()
-                << " - task_id: " << ptr->tid << std::endl;
+      std::cout << "worker_id " << workerID << " - task_id: " << ptr->tid
+                << std::endl;
       ptr->task();
     }
   }

@@ -25,7 +25,7 @@ class WorkerPool {
   void submit(const WorkerTask& task);
 
  private:
-  void executeTasksInThread();
+  void executeTasksInThread(int workerID);
 
   std::vector<std::thread> threadPool;
 
