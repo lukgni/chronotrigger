@@ -18,7 +18,7 @@ class ScheduledTask {
 
   TaskID getTaskID() const { return this->tid; }
 
-  void Run() { this->functor(); }
+  void Run() const { this->functor(); }
 
   bool operator<(const ScheduledTask& other) const {
     return this->scheduledTime > other.scheduledTime;

@@ -43,7 +43,19 @@ class Scheduler {
                  const std::function<void()>& functor,
                  std::chrono::milliseconds interval);
 
-  void calculateExecutionPlan();
+  void processQueuedExecutionStatuses();
+
+  void prepareExecutionPlan();
+
+  void executeScheduledTask(std::unique_ptr<ScheduledTask> task);
+
+  void executeScheduledTasks();
+
+  void enqueueScheduledTask(const ScheduledTask& task);
+  std::unique_ptr<ScheduledTask> dequeueScheduledTaskIfTime(TimePoint time);
+
+  void enqueueExecutionStatusEvent(const ExecutionStatusEvent& event);
+  std::unique_ptr<ExecutionStatusEvent> dequeueExecutionStatusEvent();
 
   static TaskID getNewTaskID();
 
@@ -53,9 +65,13 @@ class Scheduler {
   std::map<TaskID, std::unique_ptr<Task>> taskLookupTable;
   std::unordered_map<TaskID, std::unordered_set<TaskID>> taskDependencies;
 
-  std::priority_queue<ScheduledTask> plannedTasksQueue;
+  // TODO: Encapsulate in separate class together with associated setter/getter
+  std::priority_queue<ScheduledTask> scheduledTasksQueue;
+  std::mutex scheduledTasksQueueMtx;
 
-  std::queue<ExecutionStatusEvent> executionStatusQueue;
+  // TODO: Encapsulate in separate class together with associated setter/getter
+  std::queue<ExecutionStatusEvent> executionStasQueue;
+  std::mutex execuctionStatQueueMtx;
 };
 
 }  // namespace chronotrigger
