@@ -25,7 +25,10 @@ class WorkerPool {
   void submit(const WorkerTask& task);
 
  private:
+  TimeDuration getTimeSinceCreated() const;
   void executeTasksInThread(int workerID);
+
+  const TimePoint creationTimestamp;
 
   std::vector<std::thread> threadPool;
 
