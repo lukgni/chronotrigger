@@ -37,7 +37,6 @@ void WorkerPool::submit(const WorkerTask& task) {
 }
 
 void WorkerPool::executeTasksInThread(int workerID) {
-  std::cout << "Worker " << workerID << " BONJOUR " << std::endl;
   while (true) {
     std::unique_ptr<WorkerTask> ptr = nullptr;
     {
@@ -70,8 +69,9 @@ void WorkerPool::executeTasksInThread(int workerID) {
     if (ptr) {
       std::cout << minutes.count() << ":" << std::setw(2) << std::setfill('0')
                 << seconds.count() << "." << std::setw(3) << std::setfill('0')
-                << milliseconds.count() << " * " << "task_id:" << ptr->tid
-                << " [worker_id:" << workerID << "]" << std::endl;
+                << milliseconds.count() << " * "
+                << "task_id:" << ptr->tid << " [worker_id:" << workerID << "]"
+                << std::endl;
 
       ptr->task();
     }
