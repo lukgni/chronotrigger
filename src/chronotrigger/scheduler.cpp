@@ -5,7 +5,7 @@
 
 using namespace chronotrigger;
 
-Scheduler::Scheduler(int threadPoolSize) {}
+Scheduler::Scheduler(int workerPoolSize) : workerPool(workerPoolSize) {}
 
 TaskID Scheduler::getNewTaskID() {
   static TaskID taskId = 0;
@@ -33,14 +33,14 @@ void Scheduler::prepareExecutionPlan() {
   }
 }
 
-void Scheduler::executeScheduledTask(std::unique_ptr<ScheduledTask> task) {
+void Scheduler::executeScheduledTask(const ScheduledTask&& task) {
   enqueueExecutionStatusEvent(ExecutionStatusEvent(
-      task->getTaskID(), TaskStatusE::Started, TimeClock::now()));
+      task.getTaskID(), TaskStatusE::Started, TimeClock::now()));
 
-  task->Run();
+  task.Run();
 
   enqueueExecutionStatusEvent(ExecutionStatusEvent(
-      task->getTaskID(), TaskStatusE::Finished, TimeClock::now()));
+      task.getTaskID(), TaskStatusE::Finished, TimeClock::now()));
 }
 
 void Scheduler::enqueueScheduledTask(const ScheduledTask& task) {
@@ -63,7 +63,8 @@ std::unique_ptr<ScheduledTask> Scheduler::dequeueScheduledTaskIfTime(
   return ptr;
 }
 
-void Scheduler::enqueueExecutionStatusEvent(const ExecutionStatusEvent& event) {
+void Scheduler::enqueueExecutionStatusEvent(
+    const ExecutionStatusEvent&& event) {
   std::lock_guard lock(execuctionStatQueueMtx);
 
   executionStasQueue.emplace(event);
@@ -86,8 +87,9 @@ void Scheduler::execute() {
   prepareExecutionPlan();
 
   while (auto ptr = dequeueScheduledTaskIfTime(TimeClock::now())) {
-    std::cout << "TaskID: " << ptr->getTaskID() << std::endl;
-    executeScheduledTask(std::move(ptr));
+    workerPool.submit(WorkerTask(ptr->getTaskID(), [this, task = *ptr] {
+      executeScheduledTask(std::move(task));
+    }));
   }
 }
 
@@ -99,8 +101,9 @@ void Scheduler::execute() {
     prepareExecutionPlan();
 
     while (auto ptr = dequeueScheduledTaskIfTime(TimeClock::now())) {
-      std::cout << "TaskID: " << ptr->getTaskID() << std::endl;
-      executeScheduledTask(std::move(ptr));
+      workerPool.submit(WorkerTask(ptr->getTaskID(), [this, task = *ptr] {
+        executeScheduledTask(std::move(task));
+      }));
     }
 
     auto executionEndTime = TimeClock::now();

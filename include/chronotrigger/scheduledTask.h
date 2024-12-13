@@ -18,6 +18,8 @@ class ScheduledTask {
 
   TaskID getTaskID() const { return this->tid; }
 
+  std::function<void()> getTask() { return std::move(this->functor); }
+
   void Run() const { this->functor(); }
 
   bool operator<(const ScheduledTask& other) const {

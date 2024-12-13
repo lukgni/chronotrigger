@@ -12,12 +12,13 @@
 #include "./scheduledTask.h"
 #include "./task.h"
 #include "./types.h"
+#include "./workerPool.h"
 
 namespace chronotrigger {
 
 class Scheduler {
  public:
-  Scheduler(int threadPoolSize);
+  Scheduler(int workerPoolSize);
 
   TaskID addFixedRateTask(const std::function<void()>& functor,
                           std::chrono::milliseconds interval);
@@ -31,7 +32,7 @@ class Scheduler {
 
   void execute();
   [[noreturn]] void executeInLoop(
-      std::chrono::milliseconds tickInterval = std::chrono::milliseconds(50));
+      std::chrono::milliseconds tickInterval = std::chrono::milliseconds(4));
 
  private:
   TaskID addTask(TaskTypeE type,
@@ -42,19 +43,17 @@ class Scheduler {
 
   void prepareExecutionPlan();
 
-  void executeScheduledTask(std::unique_ptr<ScheduledTask> task);
+  void executeScheduledTask(const ScheduledTask&& task);
 
   void executeScheduledTasks();
 
   void enqueueScheduledTask(const ScheduledTask& task);
   std::unique_ptr<ScheduledTask> dequeueScheduledTaskIfTime(TimePoint time);
 
-  void enqueueExecutionStatusEvent(const ExecutionStatusEvent& event);
+  void enqueueExecutionStatusEvent(const ExecutionStatusEvent&& event);
   std::unique_ptr<ExecutionStatusEvent> dequeueExecutionStatusEvent();
 
   static TaskID getNewTaskID();
-
-  int threadPoolSize;
 
   std::map<TaskID, std::unique_ptr<Task>> taskLookupTable;
   std::unordered_map<TaskID, std::unordered_set<TaskID>> taskDependencies;
@@ -66,6 +65,8 @@ class Scheduler {
   // TODO: Encapsulate in separate class together with associated setter/getter
   std::queue<ExecutionStatusEvent> executionStasQueue;
   std::mutex execuctionStatQueueMtx;
+
+  WorkerPool workerPool;
 };
 
 }  // namespace chronotrigger
