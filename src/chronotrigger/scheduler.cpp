@@ -16,7 +16,6 @@ TaskID Scheduler::getNewTaskID() {
   return taskId++;
 }
 
-// add mutex here
 void Scheduler::processQueuedExecutionStatuses() {
   while (auto ptr = dequeueExecutionStatusEvent()) {
     if (auto it = taskLookupTable.find(ptr->tid); it != taskLookupTable.end()) {
