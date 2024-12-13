@@ -19,25 +19,25 @@ Task::Task(TaskID tid,
 }
 
 std::function<void()> Task::getFunctor() const {
-  return this->functor;
+  return functor;
 }
 
 TimePoint Task::getStartedAt() const {
-  return this->startedAt;
+  return startedAt;
 }
 
 TimePoint Task::getFinishedAt() const {
-  return this->finishedAt;
+  return finishedAt;
 }
 
 TimePoint Task::getDesiredStartingTime() const {
   const TimePoint* timeReference = nullptr;
-  switch (this->type) {
+  switch (type) {
     case TaskTypeE::FixedRate:
-      timeReference = &this->startedAt;
+      timeReference = &startedAt;
       break;
     case TaskTypeE::FixedDelay:
-      timeReference = &this->finishedAt;
+      timeReference = &finishedAt;
       break;
   }
 
@@ -45,24 +45,24 @@ TimePoint Task::getDesiredStartingTime() const {
     return TimeClock::now();
   }
 
-  return *timeReference + this->interval;
+  return *timeReference + interval;
 }
 
 TaskStatusE Task::getStatus() const {
-  return this->status;
+  return status;
 }
 
 void Task::setStatus(TaskStatusE newStatus, TimePoint time) {
-  if (time >= this->changedStatusAt) {
-    this->status = newStatus;
-    this->changedStatusAt = time;
+  if (time >= changedStatusAt) {
+    status = newStatus;
+    changedStatusAt = time;
 
-    switch (this->status) {
+    switch (status) {
       case TaskStatusE::Finished:
-        this->finishedAt = time;
+        finishedAt = time;
         break;
       case TaskStatusE::Started:
-        this->startedAt = time;
+        startedAt = time;
         break;
       default:
         break;
