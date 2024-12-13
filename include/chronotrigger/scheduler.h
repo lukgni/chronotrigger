@@ -37,7 +37,7 @@ class Scheduler {
  private:
   TaskID addTask(TaskTypeE type,
                  const std::function<void()>& functor,
-                 std::chrono::milliseconds interval);
+                 TimeUnit interval);
 
   void processQueuedExecutionStatuses();
 

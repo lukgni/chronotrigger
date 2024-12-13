@@ -62,14 +62,14 @@ void WorkerPool::executeTasksInThread(int workerID) {
     auto seconds =
         std::chrono::duration_cast<std::chrono::seconds>(timeSinceCreated) -
         minutes;
-    auto milliseconds =
-        timeSinceCreated -
-        std::chrono::duration_cast<std::chrono::milliseconds>(seconds);
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                            timeSinceCreated) -
+                        seconds - minutes;
 
     if (ptr) {
       std::cout << minutes.count() << ":" << std::setw(2) << std::setfill('0')
                 << seconds.count() << "." << std::setw(3) << std::setfill('0')
-                << milliseconds.count() << " * "
+                << milliseconds.count() % 1000 << " * "
                 << "task_id:" << ptr->tid << " [worker_id:" << workerID << "]"
                 << std::endl;
 
