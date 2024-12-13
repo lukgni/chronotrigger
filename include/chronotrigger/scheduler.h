@@ -17,14 +17,7 @@ namespace chronotrigger {
 
 class Scheduler {
  public:
-  enum class TickIntervalsE {
-    Interval_004ms = 4,
-    Interval_040ms = 40,
-    Interval_100ms = 100,
-    Interval_500ms = 500,
-  };
-
-  Scheduler(int threadPoolSize, TickIntervalsE tickInterval);
+  Scheduler(int threadPoolSize);
 
   TaskID addFixedRateTask(const std::function<void()>& functor,
                           std::chrono::milliseconds interval);
@@ -36,7 +29,9 @@ class Scheduler {
 
   void addDependency(TaskID target, std::vector<TaskID> dependencies);
 
-  [[noreturn]] void execute();
+  void execute();
+  [[noreturn]] void executeInLoop(
+      std::chrono::milliseconds tickInterval = std::chrono::milliseconds(50));
 
  private:
   TaskID addTask(TaskTypeE type,
@@ -60,7 +55,6 @@ class Scheduler {
   static TaskID getNewTaskID();
 
   int threadPoolSize;
-  std::chrono::milliseconds timerInterval;
 
   std::map<TaskID, std::unique_ptr<Task>> taskLookupTable;
   std::unordered_map<TaskID, std::unordered_set<TaskID>> taskDependencies;

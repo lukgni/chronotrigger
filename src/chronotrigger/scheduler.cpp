@@ -5,11 +5,7 @@
 
 using namespace chronotrigger;
 
-Scheduler::Scheduler(
-    int threadPoolSize,
-    TickIntervalsE tickInterval = TickIntervalsE::Interval_040ms)
-    : timerInterval(std::chrono::milliseconds(static_cast<int>(tickInterval))) {
-}
+Scheduler::Scheduler(int threadPoolSize) {}
 
 TaskID Scheduler::getNewTaskID() {
   static TaskID taskId = 0;
@@ -85,7 +81,17 @@ std::unique_ptr<ExecutionStatusEvent> Scheduler::dequeueExecutionStatusEvent() {
   return ptr;
 }
 
-[[noreturn]] void Scheduler::execute() {
+void Scheduler::execute() {
+  processQueuedExecutionStatuses();
+  prepareExecutionPlan();
+
+  while (auto ptr = dequeueScheduledTaskIfTime(TimeClock::now())) {
+    std::cout << "TaskID: " << ptr->getTaskID() << std::endl;
+    executeScheduledTask(std::move(ptr));
+  }
+}
+
+[[noreturn]] void Scheduler::executeInLoop(std::chrono::milliseconds interval) {
   while (true) {
     auto executionStartTime = chronotrigger::TimeClock::now();
 
@@ -98,12 +104,12 @@ std::unique_ptr<ExecutionStatusEvent> Scheduler::dequeueExecutionStatusEvent() {
     }
 
     auto executionEndTime = TimeClock::now();
-    auto consumedSlotTime =
+    auto consumedPartOfTimeInterval =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             executionEndTime - executionStartTime);
 
     auto timeToSleep = std::max(std::chrono::milliseconds(0),
-                                timerInterval - consumedSlotTime);
+                                interval - consumedPartOfTimeInterval);
 
     std::this_thread::sleep_for(timeToSleep);
   }
