@@ -95,7 +95,7 @@ void Scheduler::execute() {
 
 [[noreturn]] void Scheduler::executeInLoop(std::chrono::milliseconds interval) {
   while (true) {
-    auto executionStartTime = chronotrigger::TimeClock::now();
+    auto executionStartTime = TimeClock::now();
 
     processQueuedExecutionStatuses();
     prepareExecutionPlan();
@@ -107,12 +107,12 @@ void Scheduler::execute() {
     }
 
     auto executionEndTime = TimeClock::now();
-    auto consumedPartOfTimeInterval =
-        std::chrono::duration_cast<std::chrono::milliseconds>(
-            executionEndTime - executionStartTime);
+    auto consumedPartOfTimeInterval = std::chrono::duration_cast<TimeUnit>(
+        executionEndTime - executionStartTime);
 
-    auto timeToSleep = std::max(std::chrono::milliseconds(0),
-                                interval - consumedPartOfTimeInterval);
+    auto timeToSleep =
+        std::max(TimeUnit(0), std::chrono::duration_cast<TimeUnit>(interval) -
+                                  consumedPartOfTimeInterval);
 
     std::this_thread::sleep_for(timeToSleep);
   }
@@ -120,17 +120,19 @@ void Scheduler::execute() {
 
 TaskID Scheduler::addFixedRateTask(const std::function<void()>& functor,
                                    std::chrono::milliseconds interval) {
-  return addTask(TaskTypeE::FixedRate, functor, interval);
+  return addTask(TaskTypeE::FixedRate, functor,
+                 std::chrono::duration_cast<TimeUnit>(interval));
 }
 
 TaskID Scheduler::addFixedDelayTask(const std::function<void()>& functor,
                                     std::chrono::milliseconds interval) {
-  return addTask(TaskTypeE::FixedDelay, functor, interval);
+  return addTask(TaskTypeE::FixedDelay, functor,
+                 std::chrono::duration_cast<TimeUnit>(interval));
 }
 
 TaskID Scheduler::addTask(TaskTypeE type,
                           const std::function<void()>& functor,
-                          std::chrono::milliseconds interval) {
+                          TimeUnit interval) {
   auto tid = getNewTaskID();
 
   taskLookupTable[tid] =

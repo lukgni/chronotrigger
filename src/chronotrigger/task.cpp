@@ -5,7 +5,7 @@ using namespace chronotrigger;
 Task::Task(TaskID tid,
            TaskTypeE type,
            const std::function<void()>& functor,
-           std::chrono::milliseconds interval)
+           TimeUnit interval)
     : tid(tid),
       status(TaskStatusE::Finished),
       type(type),

@@ -24,7 +24,7 @@ class Task {
   Task(TaskID tid,
        TaskTypeE type,
        const std::function<void()>& functor,
-       std::chrono::milliseconds interval);
+       TimeUnit interval);
 
   ~Task() = default;
 
@@ -45,7 +45,7 @@ class Task {
   TaskStatusE status;
 
   TaskTypeE type;
-  std::chrono::milliseconds interval;
+  TimeUnit interval;
 
   TimePoint startedAt;
   TimePoint finishedAt;
