@@ -24,8 +24,8 @@ TaskDependenciesStore::tryAddDependenciesOrReturnCycle(
   auto blockedByCpy = blockedBy;
 
   for (auto tid : dependencies) {
-    blockedByCpy[dependent].insert(tid);
-    blockingCpy[tid].insert(dependent);
+    blockingCpy[dependent].insert(tid);
+    blockedByCpy[tid].insert(dependent);
   }
 
   auto resPair =
@@ -47,8 +47,8 @@ std::vector<TaskID> TaskDependenciesStore::getTaskIDsBlockedBy(
     TaskID tid) const {
   std::vector<TaskID> result;
 
-  auto it = blocking.find(tid);
-  if (it != blocking.end()) {
+  auto it = blockedBy.find(tid);
+  if (it != blockedBy.end()) {
     result.insert(result.end(), it->second.begin(), it->second.end());
   }
 
@@ -59,8 +59,8 @@ std::vector<TaskID> TaskDependenciesStore::getTaskIDsBlocking(
     TaskID tid) const {
   std::vector<TaskID> result;
 
-  auto it = blockedBy.find(tid);
-  if (it != blockedBy.end()) {
+  auto it = blocking.find(tid);
+  if (it != blocking.end()) {
     result.insert(result.end(), it->second.begin(), it->second.end());
   }
 
@@ -80,7 +80,7 @@ TaskDependenciesStore::sortTaskIDsTopologicallyOrReturnCycleIfDetected(
   std::unordered_map<TaskID, int> inDegrees;
   std::vector<TaskID> idsTopoSorted, cycledIds;
 
-  for (auto [tid, deps] : blockedBy) {
+  for (auto [tid, deps] : blocking) {
     if (inDegrees.find(tid) == inDegrees.end()) {
       inDegrees[tid] = 0;
     }
@@ -98,8 +98,8 @@ TaskDependenciesStore::sortTaskIDsTopologicallyOrReturnCycleIfDetected(
     q.pop();
     idsTopoSorted.push_back(v);
 
-    auto it = blocking.find(v);
-    if (it != blocking.end()) {
+    auto it = blockedBy.find(v);
+    if (it != blockedBy.end()) {
       for (auto taskBlocked : it->second) {
         inDegrees[taskBlocked]--;
         if (inDegrees[taskBlocked] == 0) {
