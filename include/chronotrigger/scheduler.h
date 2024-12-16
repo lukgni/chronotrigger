@@ -11,6 +11,7 @@
 #include "./executionStatusEvent.h"
 #include "./scheduledTask.h"
 #include "./task.h"
+#include "./taskDependenciesStore.h"
 #include "./types.h"
 #include "./workerPool.h"
 
@@ -26,12 +27,13 @@ class Scheduler {
   TaskID addFixedDelayTask(const std::function<void()>& functor,
                            std::chrono::milliseconds interval);
 
-  void addDependency(TaskID target, TaskID dependency);
+  void addDependency(TaskID dependentTaskID, TaskID dependencyTaskID);
 
-  void addDependency(TaskID target, std::vector<TaskID> dependencies);
+  void addDependencies(TaskID dependentTaskId,
+                       std::vector<TaskID> dependencyTaskIDs);
 
   void execute();
-  [[noreturn]] void executeInLoop(
+  void executeInLoop(
       std::chrono::milliseconds tickInterval = std::chrono::milliseconds(4));
 
  private:
@@ -54,15 +56,15 @@ class Scheduler {
   std::unique_ptr<ExecutionStatusEvent> dequeueExecutionStatusEvent();
 
   static TaskID getNewTaskID();
+  
+  std::map<TaskID, std::shared_ptr<Task>> taskLookupTable;
+  TaskDependenciesStore tasksDependencies;
 
-  std::map<TaskID, std::unique_ptr<Task>> taskLookupTable;
-  std::unordered_map<TaskID, std::unordered_set<TaskID>> taskDependencies;
-
-  // TODO: Encapsulate in separate class together with associated setter/getter
+  // TODO: Encapsulate into separate class
   std::priority_queue<ScheduledTask> scheduledTasksQueue;
   std::mutex scheduledTasksQueueMtx;
 
-  // TODO: Encapsulate in separate class together with associated setter/getter
+  // TODO: Encapsulate into separate class
   std::queue<ExecutionStatusEvent> executionStasQueue;
   std::mutex execuctionStatQueueMtx;
 

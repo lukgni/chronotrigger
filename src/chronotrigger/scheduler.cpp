@@ -3,6 +3,8 @@
 #include <iostream>
 #include <thread>
 
+#include "chronotrigger/exceptions.h"
+
 using namespace chronotrigger;
 
 Scheduler::Scheduler(int workerPoolSize) : workerPool(workerPoolSize) {}
@@ -93,7 +95,7 @@ void Scheduler::execute() {
   }
 }
 
-[[noreturn]] void Scheduler::executeInLoop(std::chrono::milliseconds interval) {
+void Scheduler::executeInLoop(std::chrono::milliseconds interval) {
   while (true) {
     auto executionStartTime = TimeClock::now();
 
@@ -136,12 +138,48 @@ TaskID Scheduler::addTask(TaskTypeE type,
   auto tid = getNewTaskID();
 
   taskLookupTable[tid] =
-      std::make_unique<Task>(Task(tid, type, functor, interval));
+      std::make_shared<Task>(Task(tid, type, functor, interval));
+  tasksDependencies.registerTask(tid);
 
   return tid;
 }
 
-void Scheduler::addDependency(TaskID target, TaskID dependency) {
-  // add circular dependency detection
-  taskDependencies[target].insert(dependency);
+void Scheduler::addDependency(TaskID dependentTaskID, TaskID dependencyTaskID) {
+  addDependencies(dependentTaskID, std::vector<TaskID>{dependencyTaskID});
+}
+
+void Scheduler::addDependencies(TaskID dependentTaskID,
+                                std::vector<TaskID> dependencyTaskIDs) {
+  auto taskExistenceCheckOk = true;
+  TaskID notFound = -1;
+  if (taskLookupTable.find(dependentTaskID) == taskLookupTable.end()) {
+    taskExistenceCheckOk = false;
+    notFound = dependentTaskID;
+  } else {
+    for (auto d : dependencyTaskIDs) {
+      if (taskLookupTable.find(d) == taskLookupTable.end()) {
+        notFound = d;
+        taskExistenceCheckOk = false;
+        break;
+      }
+    }
+  }
+
+  if (!taskExistenceCheckOk) {
+    std::ostringstream oss;
+    oss << "Task has been not found: " << notFound;
+    throw TaskNotFoundException(oss.str());
+  }
+
+  auto opt = tasksDependencies.tryAddDependenciesOrReturnCycle(
+      dependentTaskID, dependencyTaskIDs);
+
+  if (opt.has_value()) {
+    std::ostringstream oss;
+    oss << "Adding dependency result in tasks relation cycle: ";
+    for (auto tid : opt.value()) {
+      oss << tid << " ";
+    }
+    throw TaskCycleException(oss.str());
+  }
 }
