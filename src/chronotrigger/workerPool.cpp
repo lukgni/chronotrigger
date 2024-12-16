@@ -1,9 +1,9 @@
-#include "../../include/chronotrigger/workerPool.h"
+#include "chronotrigger/workerPool.h"
 
 #include <iomanip>
 #include <ostream>
 
-#include "../../include/chronotrigger/logger.h"
+#include "chronotrigger/logger.h"
 
 using namespace chronotrigger;
 

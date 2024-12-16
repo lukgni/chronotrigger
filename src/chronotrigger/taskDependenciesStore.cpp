@@ -1,4 +1,4 @@
-#include "../../include/chronotrigger/taskDependenciesStore.h"
+#include "chronotrigger/taskDependenciesStore.h"
 
 #include <queue>
 
