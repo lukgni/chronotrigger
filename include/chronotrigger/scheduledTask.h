@@ -11,20 +11,17 @@ class ScheduledTask {
  public:
   ScheduledTask(TaskID tid,
                 std::function<void()> functor,
-                TimePoint scheduledTime)
-      : tid(tid), functor(std::move(functor)), scheduledTime(scheduledTime) {}
+                TimePoint scheduledTime);
 
-  TimePoint getSheduledTime() const { return this->scheduledTime; }
+  TimePoint getSheduledTime() const;
 
-  TaskID getTaskID() const { return this->tid; }
+  TaskID getTaskID() const;
 
-  std::function<void()> getTask() { return std::move(this->functor); }
+  std::function<void()> getTask();
 
-  void Run() const { this->functor(); }
+  void Run() const;
 
-  bool operator<(const ScheduledTask& other) const {
-    return this->scheduledTime > other.scheduledTime;
-  }
+  bool operator<(const ScheduledTask& other) const;
 
  private:
   TaskID tid;
@@ -33,4 +30,5 @@ class ScheduledTask {
 };
 
 }  // namespace chronotrigger
+
 #endif  // CHRONOTRIGGER_SCHEDULEDTASK_H
