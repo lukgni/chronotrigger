@@ -1,6 +1,6 @@
 #include "chronotrigger/scheduler.h"
 
-#include <iostream>
+#include <ostream>
 #include <thread>
 
 #include "chronotrigger/exceptions.h"

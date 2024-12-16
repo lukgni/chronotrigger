@@ -1,7 +1,9 @@
 #include "../../include/chronotrigger/workerPool.h"
 
 #include <iomanip>
-#include <iostream>
+#include <ostream>
+
+#include "../../include/chronotrigger/logger.h"
 
 using namespace chronotrigger;
 
@@ -67,11 +69,13 @@ void WorkerPool::executeTasksInThread(int workerID) {
                         seconds - minutes;
 
     if (ptr) {
-      std::cout << minutes.count() << ":" << std::setw(2) << std::setfill('0')
-                << seconds.count() << "." << std::setw(3) << std::setfill('0')
-                << milliseconds.count() % 1000 << " * "
-                << "task_id:" << ptr->tid << " [worker_id:" << workerID << "]"
-                << std::endl;
+      std::ostringstream oss;
+      oss << minutes.count() << ":" << std::setw(2) << std::setfill('0')
+          << seconds.count() << "." << std::setw(3) << std::setfill('0')
+          << milliseconds.count() % 1000 << " * "
+          << "task_id:" << ptr->tid << " [worker_id:" << workerID << "]"
+          << std::endl;
+      Logger::print(oss.str());
 
       ptr->task();
     }

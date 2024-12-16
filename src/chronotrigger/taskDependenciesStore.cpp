@@ -79,7 +79,7 @@ TaskDependenciesStore::sortTaskIDsTopologicallyOrReturnCycleIfDetected(
   std::queue<TaskID> q;
   std::unordered_map<TaskID, int> inDegrees;
   std::vector<TaskID> idsTopoSorted, cycledIds;
-  
+
   for (auto [tid, deps] : blockedBy) {
     if (inDegrees.find(tid) == inDegrees.end()) {
       inDegrees[tid] = 0;
