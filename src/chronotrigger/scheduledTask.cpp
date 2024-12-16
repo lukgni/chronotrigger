@@ -7,6 +7,10 @@ ScheduledTask::ScheduledTask(TaskID tid,
                              TimePoint scheduledTime)
     : tid(tid), functor(std::move(functor)), scheduledTime(scheduledTime) {}
 
+void ScheduledTask::setScheduledTime(TimePoint time) {
+  scheduledTime = time;
+}
+
 TimePoint ScheduledTask::getSheduledTime() const {
   return scheduledTime;
 }
@@ -24,5 +28,5 @@ void ScheduledTask::Run() const {
 }
 
 bool ScheduledTask::operator<(const ScheduledTask& other) const {
-  return scheduledTime > other.scheduledTime;
+  return scheduledTime >= other.scheduledTime;
 }

@@ -15,4 +15,5 @@ using TimeDuration =
 using TaskID = int;
 
 }  // namespace chronotrigger
+
 #endif  // CHRONOTRIGGER_TYPES_H

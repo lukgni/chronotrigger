@@ -23,15 +23,16 @@ void Scheduler::processQueuedExecutionStatuses() {
 }
 
 void Scheduler::prepareExecutionPlan() {
-  for (const auto& [taskID, taskPtr] : taskLookupTable) {
-    if (taskPtr->getStatus() != TaskStatusE::Finished) {
+  for (auto tid : tasksDependencies.getTaskIdsTopollogicalySorted()) {
+    if (taskLookupTable[tid]->getStatus() != TaskStatusE::Finished) {
       continue;
     }
 
-    enqueueScheduledTask(ScheduledTask(taskID, taskPtr->getFunctor(),
-                                       taskPtr->getDesiredStartingTime()));
+    enqueueScheduledTask(
+        ScheduledTask(tid, taskLookupTable[tid]->getFunctor(),
+                      taskLookupTable[tid]->getDesiredStartingTime()));
 
-    taskPtr->setStatus(TaskStatusE::Scheduled, TimeClock::now());
+    taskLookupTable[tid]->setStatus(TaskStatusE::Scheduled, TimeClock::now());
   }
 }
 
@@ -103,6 +104,24 @@ void Scheduler::executeInLoop(std::chrono::milliseconds interval) {
     prepareExecutionPlan();
 
     while (auto ptr = dequeueScheduledTaskIfTime(TimeClock::now())) {
+      auto shouldBePostponed = false;
+      auto dependencies =
+          tasksDependencies.getTaskIDsBlockedBy(ptr->getTaskID());
+      for (auto d : dependencies) {
+        if (taskLookupTable[d]->getStatus() < TaskStatusE::Finished) {
+          shouldBePostponed = true;
+          break;
+        }
+      }
+
+      if (shouldBePostponed) {
+        ptr->setScheduledTime(TimeClock ::now() + interval);
+        taskLookupTable[ptr->getTaskID()]->setStatus(TaskStatusE::Scheduled,
+                                                     TimeClock::now());
+        enqueueScheduledTask(*ptr);
+        continue;
+      }
+
       workerPool.submit(WorkerTask(ptr->getTaskID(), [this, task = *ptr] {
         executeScheduledTask(std::move(task));
       }));

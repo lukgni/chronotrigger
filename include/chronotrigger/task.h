@@ -8,10 +8,10 @@
 namespace chronotrigger {
 
 enum class TaskStatusE : int {
-  Scheduled,
+  Ready,
   Started,
-  Blocked,
   Finished,
+  Scheduled,
 };
 
 enum class TaskTypeE : int {

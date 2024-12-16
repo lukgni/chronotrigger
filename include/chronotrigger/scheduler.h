@@ -56,7 +56,7 @@ class Scheduler {
   std::unique_ptr<ExecutionStatusEvent> dequeueExecutionStatusEvent();
 
   static TaskID getNewTaskID();
-  
+
   std::map<TaskID, std::shared_ptr<Task>> taskLookupTable;
   TaskDependenciesStore tasksDependencies;
 

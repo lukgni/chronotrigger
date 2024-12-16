@@ -14,7 +14,8 @@ class ScheduledTask {
                 TimePoint scheduledTime);
 
   TimePoint getSheduledTime() const;
-
+  void setScheduledTime(TimePoint time);
+  
   TaskID getTaskID() const;
 
   std::function<void()> getTask();

@@ -17,4 +17,5 @@ struct ExecutionStatusEvent {
 };
 
 }  // namespace chronotrigger
+
 #endif  // CHRONOTRIGGER_EXECUTIONSTATUSEVENT_H
