@@ -8,10 +8,12 @@
 namespace chronotrigger {
 
 enum class TaskStatusE : int {
-  Ready,
+  Initialized,
+  Planned,
+  Scheduled,
   Started,
   Finished,
-  Scheduled,
+
 };
 
 enum class TaskTypeE : int {
@@ -40,6 +42,8 @@ class Task {
 
   TimePoint getDesiredStartingTime() const;
 
+  bool isFirstRun() const { return firstRun; }
+
  private:
   TaskID tid;
   TaskStatusE status;
@@ -52,6 +56,8 @@ class Task {
   TimePoint changedStatusAt;
 
   std::function<void()> functor;
+
+  bool firstRun;
 };
 
 }  // namespace chronotrigger

@@ -7,10 +7,11 @@ Task::Task(TaskID tid,
            const std::function<void()>& functor,
            TimeUnit interval)
     : tid(tid),
-      status(TaskStatusE::Finished),
+      status(TaskStatusE::Initialized),
       type(type),
       interval(interval),
-      functor(functor) {
+      functor(functor),
+      firstRun(true) {
   auto now = TimeClock::now();
 
   startedAt = now;
@@ -31,6 +32,10 @@ TimePoint Task::getFinishedAt() const {
 }
 
 TimePoint Task::getDesiredStartingTime() const {
+  if (status == TaskStatusE::Initialized) {
+    return TimeClock ::now();
+  }
+
   const TimePoint* timeReference = nullptr;
   switch (type) {
     case TaskTypeE::FixedRate:
@@ -62,6 +67,7 @@ void Task::setStatus(TaskStatusE newStatus, TimePoint time) {
         finishedAt = time;
         break;
       case TaskStatusE::Started:
+        firstRun = false;
         startedAt = time;
         break;
       default:
