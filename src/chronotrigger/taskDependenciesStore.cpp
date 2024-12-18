@@ -14,6 +14,39 @@ void TaskDependenciesStore::registerTask(TaskID tid) {
   if (it == blockedBy.end()) {
     blockedBy[tid] = std::unordered_set<TaskID>();
   }
+
+  auto itd = inDegreesTracker.find(tid);
+  if (itd == inDegreesTracker.end()) {
+    inDegreesTracker[tid] = 0;
+  }
+}
+
+void TaskDependenciesStore::markTaskAsRunning(TaskID tid) {
+  for (auto tid : blockedBy[tid]) {
+    inDegreesTracker[tid]++;
+  }
+}
+
+void TaskDependenciesStore::markTaskAsFinished(TaskID tid) {
+  for (auto tid : blockedBy[tid]) {
+    inDegreesTracker[tid]--;
+  }
+}
+
+bool TaskDependenciesStore::isTaskBlocked(TaskID tid) {
+  return inDegreesTracker[tid] != 0;
+}
+
+bool TaskDependenciesStore::isTaskBlocking(TaskID tid) {
+  auto res = false;
+  for (auto& task : blockedBy[tid]) {
+    if (isTaskBlocked(task)) {
+      res = true;
+      break;
+    }
+  }
+
+  return res;
 }
 
 std::optional<std::vector<TaskID>>
@@ -22,10 +55,14 @@ TaskDependenciesStore::tryAddDependenciesOrReturnCycle(
     const std::vector<TaskID>& dependencies) {
   auto blockingCpy = blocking;
   auto blockedByCpy = blockedBy;
+  auto newDepsCounter = 0;
 
   for (auto tid : dependencies) {
-    blockingCpy[dependent].insert(tid);
     blockedByCpy[tid].insert(dependent);
+    auto [it, newDep] = blockingCpy[dependent].insert(tid);
+    if (newDep) {
+      newDepsCounter++;
+    }
   }
 
   auto resPair =
@@ -39,6 +76,7 @@ TaskDependenciesStore::tryAddDependenciesOrReturnCycle(
   blocking = blockingCpy;
   blockedBy = blockedByCpy;
   topollogicalySorted = resPair.first;
+  inDegreesTracker[dependent] += newDepsCounter;
 
   return std::nullopt;
 }

@@ -21,6 +21,11 @@ class TaskDependenciesStore {
 
   std::vector<TaskID> getTaskIdsTopollogicalySorted() const;
 
+  void markTaskAsRunning(TaskID tid);
+  void markTaskAsFinished(TaskID tid);
+  bool isTaskBlocked(TaskID tid);
+  bool isTaskBlocking(TaskID tid);
+
  private:
   static std::pair<std::vector<TaskID>, std::vector<TaskID>>
   sortTaskIDsTopologicallyOrReturnCycleIfDetected(
@@ -29,6 +34,7 @@ class TaskDependenciesStore {
 
   std::unordered_map<TaskID, std::unordered_set<TaskID>> blocking;
   std::unordered_map<TaskID, std::unordered_set<TaskID>> blockedBy;
+  std::unordered_map<TaskID, int> inDegreesTracker;
 
   std::vector<TaskID> topollogicalySorted;
 };
