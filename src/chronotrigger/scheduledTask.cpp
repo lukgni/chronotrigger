@@ -28,5 +28,5 @@ void ScheduledTask::Run() const {
 }
 
 bool ScheduledTask::operator<(const ScheduledTask& other) const {
-  return scheduledTime >= other.scheduledTime;
+  return scheduledTime > other.scheduledTime;
 }
