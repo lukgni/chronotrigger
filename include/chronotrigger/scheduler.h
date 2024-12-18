@@ -43,6 +43,8 @@ class Scheduler {
 
   void processQueuedExecutionStatuses();
 
+  void updateCompletionStatusesInDependenciesStore();
+
   void prepareExecutionPlan();
 
   void executeScheduledTask(const ScheduledTask&& task);
