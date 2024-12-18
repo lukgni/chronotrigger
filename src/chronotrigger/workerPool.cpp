@@ -70,14 +70,37 @@ void WorkerPool::executeTasksInThread(int workerID) {
 
     if (ptr) {
       std::ostringstream oss;
-      oss << minutes.count() << ":" << std::setw(2) << std::setfill('0')
-          << seconds.count() << "." << std::setw(3) << std::setfill('0')
-          << milliseconds.count() % 1000 << " * "
-          << "task_id:" << ptr->tid << " [worker_id:" << workerID << "]"
-          << std::endl;
-      Logger::print(oss.str());
+      oss << "task_id:" << ptr->tid << " STARTED [worker_id:" << workerID
+          << "]";
+      logMessage(oss.str());
 
       ptr->task();
+
+      oss.str("");
+      oss.clear();
+
+      oss << "task_id:" << ptr->tid << " FINISHED [worker_id:" << workerID
+          << "]";
+      logMessage(oss.str());
     }
   }
+}
+
+void WorkerPool::logMessage(const std::string& message) const {
+  auto timeSinceCreated = getTimeSinceCreated();
+  auto minutes =
+      std::chrono::duration_cast<std::chrono::minutes>(timeSinceCreated);
+  auto seconds =
+      std::chrono::duration_cast<std::chrono::seconds>(timeSinceCreated) -
+      minutes;
+  auto milliseconds =
+      std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceCreated) -
+      seconds - minutes;
+
+  std::ostringstream oss;
+  oss << minutes.count() << ":" << std::setw(2) << std::setfill('0')
+      << seconds.count() << "." << std::setw(3) << std::setfill('0')
+      << milliseconds.count() % 1000 << " * " << message << std::endl;
+
+  Logger::print(oss.str());
 }

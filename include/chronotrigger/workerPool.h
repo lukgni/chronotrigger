@@ -27,6 +27,8 @@ class WorkerPool {
  private:
   TimeDuration getTimeSinceCreated() const;
   void executeTasksInThread(int workerID);
+  
+  void logMessage(const std::string& message) const;
 
   const TimePoint creationTimestamp;
 
