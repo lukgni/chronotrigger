@@ -79,18 +79,19 @@ void Scheduler::enqueueExecutionStatusEvent(
     const ExecutionStatusEvent&& event) {
   std::lock_guard lock(execuctionStatQueueMtx);
 
-  executionStasQueue.emplace(event);
+  executionStatsQueue.emplace(event);
 }
 
 std::unique_ptr<ExecutionStatusEvent> Scheduler::dequeueExecutionStatusEvent() {
   std::lock_guard lock(execuctionStatQueueMtx);
 
-  if (executionStasQueue.empty()) {
+  if (executionStatsQueue.empty()) {
     return nullptr;
   }
 
-  auto ptr = std::make_unique<ExecutionStatusEvent>(executionStasQueue.front());
-  executionStasQueue.pop();
+  auto ptr =
+      std::make_unique<ExecutionStatusEvent>(executionStatsQueue.front());
+  executionStatsQueue.pop();
   return ptr;
 }
 
@@ -105,7 +106,7 @@ void Scheduler::execute() {
   }
 }
 
-void Scheduler::executeInLoop(std::chrono::milliseconds interval) {
+[[noreturn]] void Scheduler::executeInLoop(std::chrono::milliseconds interval) {
   while (true) {
     auto executionStartTime = TimeClock::now();
 
@@ -171,7 +172,7 @@ void Scheduler::addDependency(TaskID dependentTaskID, TaskID dependencyTaskID) {
 }
 
 void Scheduler::addDependencies(TaskID dependentTaskID,
-                                std::vector<TaskID> dependencyTaskIDs) {
+                                const std::vector<TaskID>& dependencyTaskIDs) {
   auto taskExistenceCheckOk = true;
   TaskID notFound = -1;
   if (taskLookupTable.find(dependentTaskID) == taskLookupTable.end()) {
