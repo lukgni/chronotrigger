@@ -75,6 +75,26 @@ std::unique_ptr<ScheduledTask> Scheduler::dequeueScheduledTaskIfTime(
   return ptr;
 }
 
+void Scheduler::enqueueBlockedScheduledTask(const ScheduledTask& task) {
+  std::lock_guard lock(blockedScheduledTasksQueueMtx);
+
+  blockedScheduledTasksQueue.push(task);
+}
+
+std::unique_ptr<ScheduledTask> Scheduler::dequeueBlockedScheduledTaskIfTime(
+    TimePoint time) {
+  std::lock_guard lock(blockedScheduledTasksQueueMtx);
+
+  if (blockedScheduledTasksQueue.empty() ||
+      blockedScheduledTasksQueue.top().getSheduledTime() > time) {
+    return nullptr;
+  }
+
+  auto ptr = std::make_unique<ScheduledTask>(blockedScheduledTasksQueue.top());
+  blockedScheduledTasksQueue.pop();
+  return ptr;
+}
+
 void Scheduler::enqueueExecutionStatusEvent(
     const ExecutionStatusEvent&& event) {
   std::lock_guard lock(execuctionStatQueueMtx);
@@ -95,41 +115,57 @@ std::unique_ptr<ExecutionStatusEvent> Scheduler::dequeueExecutionStatusEvent() {
   return ptr;
 }
 
-void Scheduler::execute() {
-  processQueuedExecutionStatuses();
-  prepareExecutionPlan();
+void Scheduler::processBlockedPlannedTasks(
+    std::chrono::milliseconds postponingInterval) {
+  while (auto ptr = dequeueBlockedScheduledTaskIfTime(TimeClock::now())) {
+    if (tasksDependencies.isTaskBlocked(ptr->getTaskID())) {
+      ptr->setScheduledTime(TimeClock ::now() + postponingInterval);
+      enqueueBlockedScheduledTask(*ptr);
+      continue;
+    }
 
-  while (auto ptr = dequeueScheduledTaskIfTime(TimeClock::now())) {
+    taskLookupTable[ptr->getTaskID()]->setStatus(TaskStatusE::Scheduled,
+                                                 TimeClock::now());
+    if (taskLookupTable[ptr->getTaskID()]->isFirstRun() == false) {
+      tasksDependencies.markTaskAsRunning(ptr->getTaskID());
+    }
     workerPool.submit(WorkerTask(ptr->getTaskID(), [this, task = *ptr] {
       executeScheduledTask(std::move(task));
     }));
   }
 }
 
+void Scheduler::processPlannedTasks() {
+  while (auto ptr = dequeueScheduledTaskIfTime(TimeClock::now())) {
+    if (tasksDependencies.isTaskBlocked(ptr->getTaskID())) {
+      enqueueBlockedScheduledTask(*ptr);
+      continue;
+    }
+
+    taskLookupTable[ptr->getTaskID()]->setStatus(TaskStatusE::Scheduled,
+                                                 TimeClock::now());
+    if (taskLookupTable[ptr->getTaskID()]->isFirstRun() == false) {
+      tasksDependencies.markTaskAsRunning(ptr->getTaskID());
+    }
+    workerPool.submit(WorkerTask(ptr->getTaskID(), [this, task = *ptr] {
+      executeScheduledTask(std::move(task));
+    }));
+  }
+}
+
+void Scheduler::execute(std::chrono::milliseconds postponingInterval) {
+  processQueuedExecutionStatuses();
+  updateCompletionStatusesInDependenciesStore();
+  prepareExecutionPlan();
+  processBlockedPlannedTasks(postponingInterval);
+  processPlannedTasks();
+}
+
 [[noreturn]] void Scheduler::executeInLoop(std::chrono::milliseconds interval) {
   while (true) {
     auto executionStartTime = TimeClock::now();
 
-    processQueuedExecutionStatuses();
-    updateCompletionStatusesInDependenciesStore();
-    prepareExecutionPlan();
-
-    while (auto ptr = dequeueScheduledTaskIfTime(TimeClock::now())) {
-      if (tasksDependencies.isTaskBlocked(ptr->getTaskID())) {
-        ptr->setScheduledTime(TimeClock ::now() + interval);
-        enqueueScheduledTask(*ptr);
-        continue;
-      }
-
-      taskLookupTable[ptr->getTaskID()]->setStatus(TaskStatusE::Scheduled,
-                                                   TimeClock::now());
-      if (taskLookupTable[ptr->getTaskID()]->isFirstRun() == false) {
-        tasksDependencies.markTaskAsRunning(ptr->getTaskID());
-      }
-      workerPool.submit(WorkerTask(ptr->getTaskID(), [this, task = *ptr] {
-        executeScheduledTask(std::move(task));
-      }));
-    }
+    execute(interval);
 
     auto executionEndTime = TimeClock::now();
     auto consumedPartOfTimeInterval = std::chrono::duration_cast<TimeUnit>(

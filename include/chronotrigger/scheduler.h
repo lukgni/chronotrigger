@@ -32,7 +32,7 @@ class Scheduler {
   void addDependencies(TaskID dependentTaskId,
                        const std::vector<TaskID>& dependencyTaskIDs);
 
-  void execute();
+  void execute(std::chrono::milliseconds postponingInterval);
 
   [[noreturn]] void executeInLoop(
       std::chrono::milliseconds tickInterval = std::chrono::milliseconds(4));
@@ -48,10 +48,18 @@ class Scheduler {
 
   void prepareExecutionPlan();
 
+  void processPlannedTasks();
+
+  void processBlockedPlannedTasks(std::chrono::milliseconds postponingInterval);
+
   void executeScheduledTask(const ScheduledTask&& task);
 
   void enqueueScheduledTask(const ScheduledTask& task);
   std::unique_ptr<ScheduledTask> dequeueScheduledTaskIfTime(TimePoint time);
+
+  void enqueueBlockedScheduledTask(const ScheduledTask& task);
+  std::unique_ptr<ScheduledTask> dequeueBlockedScheduledTaskIfTime(
+      TimePoint time);
 
   void enqueueExecutionStatusEvent(const ExecutionStatusEvent&& event);
   std::unique_ptr<ExecutionStatusEvent> dequeueExecutionStatusEvent();
@@ -64,6 +72,8 @@ class Scheduler {
   // TODO: Encapsulate into separate class
   std::priority_queue<ScheduledTask> scheduledTasksQueue;
   std::mutex scheduledTasksQueueMtx;
+  std::priority_queue<ScheduledTask> blockedScheduledTasksQueue;
+  std::mutex blockedScheduledTasksQueueMtx;
 
   // TODO: Encapsulate into separate class
   std::queue<ExecutionStatusEvent> executionStatsQueue;
